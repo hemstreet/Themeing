@@ -6,3 +6,5 @@ import './app.scss';
 
 // Import ts/js
 import './components/card'
+
+console.log('test');

@@ -4,18 +4,6 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const HandlebarsPlugin = require("handlebars-webpack-plugin");
 
 module.exports = {
-  module: {
-    rules: [{
-      test: /\.hbs$/,
-      loader: 'handlebars-loader',
-      options: {
-        knownHelpersOnly: false,
-        inlineRequires: /\/assets\/(:?images|audio|video)\//ig,
-        // helperDirs: [path.join(__dirname, '/lib/hbs-helpers')],
-        partialDirs: [path.resolve(__dirname, './src/components')],
-      },
-    }]
-  },
   plugins: [
     new HtmlWebpackPlugin({
       // the template you want to use
@@ -35,6 +23,6 @@ module.exports = {
         nameOfHbsHelper: Function.prototype,
         projectHelpers: path.join(process.cwd(), "src", "helpers", "*.js")
       },
-    })
-  ],
+    }),
+  ]
 };

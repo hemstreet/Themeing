@@ -41,6 +41,16 @@ module.exports = {
             loader: 'sass-loader'
           }
         ]
+      },
+      {
+        test: /\.hbs$/,
+        loader: 'handlebars-loader',
+        options: {
+          knownHelpersOnly: false,
+          inlineRequires: /\/assets\/(:?images|audio|video)\//ig,
+          // helperDirs: [path.join(__dirname, '/lib/hbs-helpers')],
+          partialDirs: [path.resolve(__dirname, './src/components')],
+        },
       }
     ]
   },

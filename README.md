@@ -5,3 +5,6 @@ Setup
 
 Made by devs for devs
 
+Dev Notes:
+
+- [Generate multiple html files](https://github.com/jantimon/html-webpack-plugin#generating-multiple-html-files)
