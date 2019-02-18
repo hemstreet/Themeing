@@ -21,8 +21,8 @@ PATHS:
   # Paths to static assets
   imageAssets: "src/assets/**/*.{ico,jpg,png,svg}"
   miscAssets:
-    - "src/**/*"
-    - "!src/{img,js,scss,ts,hbs}/**/*"
+    - "src/assets/**"
+    - "!src/assets/**/*.{ico,jpg,png,svg}"
   # Paths to Sass libraries, which can then be loaded with @import
   sass:
   # Paths to JavaScript entry points for webpack to bundle modules

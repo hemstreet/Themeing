@@ -15,11 +15,15 @@ import webpack2 from 'webpack';
 // import uncss from 'uncss';
 import autoprefixer from 'autoprefixer';
 import rename from 'gulp-rename';
-import ts from 'gulp-typescript';
+// import ts from 'gulp-typescript';
 import sourcemaps from 'gulp-sourcemaps';
+import mergeCSS from 'gulp-merge-css';
+import insert from 'gulp-insert';
+import order from 'gulp-order';
+import concat from 'gulp-concat';
 
 
-const tsProject = ts.createProject('tsconfig.json');
+// const tsProject = ts.createProject('tsconfig.json');
 
 // Load all Gulp plugins into one variable
 const $ = plugins();
@@ -38,7 +42,7 @@ function loadConfig() {
 // Build the "dist" folder by running all of the below tasks
 // Sass must be run later so UnCSS can search for used classes in the others assets.
 gulp.task('build',
-  gulp.series(clean, gulp.parallel(pages, typescript, images, copy), sass, styleGuide));
+  gulp.series(clean, gulp.parallel(pages, getJQuery, scripts, images, copy), sass, styleGuide));
 
 // Build the site, run the server, and watch for file changes
 gulp.task('default',
@@ -90,25 +94,10 @@ function styleGuide(done) {
 // In production, the CSS is compressed
 function sass() {
 
-  const postCssPlugins = [
-    // Autoprefixer
-    autoprefixer({browsers: COMPATIBILITY}),
-
-    // UnCSS - Uncomment to remove unused styles in production
-    // PRODUCTION && uncss.postcssPlugin(UNCSS_OPTIONS),
-  ].filter(Boolean);
-
-  return gulp.src(`${PATHS.src}/**/*.{scss}`)
-    .pipe($.sourcemaps.init())
-    .pipe($.sass({
-      includePaths: PATHS.sass
-    })
-      .on('error', $.sass.logError))
-    .pipe($.postcss(postCssPlugins))
-    .pipe($.if(PRODUCTION, $.cleanCss({compatibility: 'ie9'})))
-    .pipe($.if(!PRODUCTION, $.sourcemaps.write()))
-    .pipe(gulp.dest(PATHS.dist + '/assets/css'))
-    .pipe(browser.reload({stream: true}));
+  return gulp.src(`${PATHS.src}/**/*.scss`)
+    .pipe($.sass().on('error', $.sass.logError))
+    .pipe(mergeCSS({ name: 'app.css' }))
+    .pipe(gulp.dest(`${PATHS.dist}/assets/css`));
 }
 
 let webpackConfig = {
@@ -130,22 +119,24 @@ let webpackConfig = {
   devtool: !PRODUCTION && 'source-map'
 };
 
-
+function getJQuery() {
+  return gulp.src('./node_modules/jquery/dist/jquery.min.js')
+    .pipe(gulp.dest(`${PATHS.dist}/assets/js`));
+}
 
 // Transpiles and combines typescript and javascript into one file
 // In production, the file is minified
-function typescript() {
-  return gulp.src(`${PATHS.src}/**/*.{ts}`)
+function scripts() {
+  return gulp.src(`${PATHS.src}/**/*.js`)
     .pipe(sourcemaps.init())
-    .pipe(tsProject())
+    // .pipe(ts({
+    //   noImplicitAny: true,
+    //   outFile: 'app.js' // We can remove this to build js files separately
+    // }))
+    .pipe(concat('app.js'))
     .pipe(sourcemaps.write())
-    .pipe(webpackStream(webpackConfig, webpack2))
-    .pipe($.if(PRODUCTION, $.uglify()
-      .on('error', e => {
-        console.log(e);
-      })
-    ))
-    .pipe(gulp.dest(PATHS.dist + '/assets/js'));
+    .pipe(insert.wrap('(function(window,document,jQuery){', '})(window,document,jQuery);'))
+    .pipe(gulp.dest(`${PATHS.dist}/assets/js`));
 }
 
 // Copy images to the "dist" folder
@@ -155,7 +146,7 @@ function images() {
     .pipe($.if(PRODUCTION, $.imagemin([
       $.imagemin.jpegtran({progressive: true}),
     ])))
-    .pipe(gulp.dest(PATHS.dist + '/assets/img'));
+    .pipe(gulp.dest(`${PATHS.dist}/assets/img`));
 }
 
 // Start a server with BrowserSync to preview the site in
@@ -173,12 +164,12 @@ function reload(done) {
 
 // Watch for changes to static assets, pages, Sass, and JavaScript
 function watch() {
-  gulp.watch(PATHS.miscAssets, copy);
-  gulp.watch(`${PATHS.pageTemplates}/**/*.{html,hbs}`).on('all', gulp.series(pages, browser.reload));
-  gulp.watch(`src/{layouts,components}/**/*.{html,hbs}`).on('all', gulp.series(resetPages, pages, browser.reload));
-  gulp.watch(`${PATHS.data}/**/*.{js,json,yml}`).on('all', gulp.series(resetPages, pages, browser.reload));
-  gulp.watch(`${PATHS.components}/**/*.scss`).on('all', sass);
-  gulp.watch(`${PATHS.components}/**/*.{js,ts}}`).on('all', typescript);
-  gulp.watch(PATHS.imageAssets).on('all', gulp.series(images, browser.reload));
-  gulp.watch(`${PATHS.styleGuide}/**`).on('all', gulp.series(styleGuide, browser.reload));
+  gulp.watch(PATHS.miscAssets, gulp.series(copy, reload));
+  gulp.watch(`${PATHS.pageTemplates}/**/*.{html,hbs}`).on('all', gulp.series(pages, reload));
+  gulp.watch(`src/{layouts,components}/**/*.{html,hbs}`).on('all', gulp.series(resetPages, pages, reload));
+  gulp.watch(`${PATHS.data}/**/*.{json,yml}`).on('all', gulp.series(resetPages, pages, reload));
+  gulp.watch(`src/**/*.scss`).on('all', gulp.series(sass, reload));
+  gulp.watch(`src/**/*.js`).on('all', gulp.series(scripts, reload));
+  gulp.watch(PATHS.imageAssets).on('all', gulp.series(images, reload));
+  gulp.watch(`${PATHS.styleGuide}/**`).on('all', gulp.series(styleGuide, reload));
 }
