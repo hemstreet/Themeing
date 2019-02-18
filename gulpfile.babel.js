@@ -1,106 +1,184 @@
-import del from 'del';
+'use strict';
+
+import plugins from 'gulp-load-plugins';
+import yargs from 'yargs';
+import browser from 'browser-sync';
 import gulp from 'gulp';
-import browserSync from 'browser-sync';
-// import uglify from 'gulp-uglify';
+import panini from 'panini';
+import rimraf from 'rimraf';
+import sherpa from 'style-sherpa';
+import yaml from 'js-yaml';
+import fs from 'fs';
+import webpackStream from 'webpack-stream';
+import webpack2 from 'webpack';
+// import named from 'vinyl-named';
+// import uncss from 'uncss';
+import autoprefixer from 'autoprefixer';
+import rename from 'gulp-rename';
 import ts from 'gulp-typescript';
 import sourcemaps from 'gulp-sourcemaps';
-import handlebars from 'gulp-compile-handlebars';
-import rename from 'gulp-rename';
-import wrap from 'gulp-wrap';
+
+
 const tsProject = ts.createProject('tsconfig.json');
 
-const server = browserSync.create();
+// Load all Gulp plugins into one variable
+const $ = plugins();
 
-const buildPath = 'build';
-const paths = {
-  scripts: {
-    src: 'src/**.ts',
-    dest: `${buildPath}/scripts/`
-  },
-  hbs: {
-    layout: 'src/layout.hbs',
-    templates: 'src/components**/[^_]*.hbs',
-    partials: ['src/components**/_*.hbs'],
-    pages: ['src/pages/**.hbs'],
-    dest:  `${buildPath}/`
-  }
-};
+// Check for --production flag
+const PRODUCTION = !!(yargs.argv.production);
 
-function registerHbsPartials() {
+// Load settings from settings.yml
+const {COMPATIBILITY, PORT, UNCSS_OPTIONS, PATHS} = loadConfig();
 
-
-    // gulp.src('src/components/**/_*.hbs')
-    //   .pipe(hbsAll('html', {
-    //     context: {foo: 'bar'},
-    //
-    //     partials: ['templates/partials/**/*.hbs'],}))
-    //   .pipe(rename('index.html'))
-    //   .pipe(htmlmin({collapseWhitespace: true}))
-    //   .pipe(gulp.dest(''));
-
-
-  // Might need to be in the serve to reduce overhead / caching issues
-  return gulp.src(`src/**/_*.hbs`)
-    .pipe(handlebars())
-    .pipe(wrap('Handlebars.registerPartial(<%= processPartialName(file.relative) %>, Handlebars.template(<%= contents %>));', {}, {
-      imports: {
-        processPartialName: function(fileName) {
-          // Strip the extension and the underscore
-          // Escape the output with JSON.stringify
-          return JSON.stringify(path.basename(fileName, '.js').substr(1));
-        }
-      }
-    })).pipe(gulp.dest('build/js/'));
+function loadConfig() {
+  let ymlFile = fs.readFileSync('config.yml', 'utf8');
+  return yaml.load(ymlFile);
 }
-function hbsCompile() {
 
-  return gulp.src(paths.hbs.src)
-    .pipe(handlebars({}, {}))
+// Build the "dist" folder by running all of the below tasks
+// Sass must be run later so UnCSS can search for used classes in the others assets.
+gulp.task('build',
+  gulp.series(clean, gulp.parallel(pages, typescript, images, copy), sass, styleGuide));
+
+// Build the site, run the server, and watch for file changes
+gulp.task('default',
+  gulp.series('build', server, watch));
+
+// Delete the "dist" folder
+// This happens every time a build starts
+function clean(done) {
+  rimraf(PATHS.dist, done);
+}
+
+// Copy files out of the assets folder
+function copy() {
+  return gulp.src(PATHS.miscAssets)
+    .pipe(gulp.dest(PATHS.dist + '/assets'));
+}
+
+// Copy page templates into finished HTML files
+function pages() {
+  return gulp.src(`${PATHS.pageTemplates}/**/*.{html,hbs,handlebars}`)
+    .pipe(panini({
+      root: PATHS.pageTemplates,
+      layouts:  PATHS.layouts,
+      partials:  PATHS.partials,
+      data:  PATHS.data,
+      helpers: PATHS.helpers
+    }))
     .pipe(rename((path) => {
-      path.extname = '.html';
+      path.extname = ".html";
     }))
-    .pipe(gulp.dest(buildPath));
-  //
-  // return gulp.src('source/templates/*.hbs')
-  //   .pipe(handlebars())
-  //   // .pipe(wrap('Handlebars.template(<%= contents %>)'))
-  //   // .pipe(declare({
-  //   //   namespace: 'MyApp.templates',
-  //   //   noRedeclare: true, // Avoid duplicate declarations
-  //   // }))
-  //   // .pipe(concat('templates.js'))
-  //   .pipe(gulp.dest(`${buildPath}`));
+    .pipe(gulp.dest(PATHS.dist));
 }
 
-function tsCompile() {
-  return gulp.src(paths.scripts.src)
-    .pipe(sourcemaps.init()) // This means sourcemaps will be generated
-    .pipe(tsProject({
-      outFile: 'app.js'
-    }))
-    .pipe(sourcemaps.write()) // Now the sourcemaps are added to the .js file
-    .pipe(gulp.dest(paths.scripts.dest));
-}
-const clean = () => del([buildPath]);
-
-function reload(done) {
-  server.reload();
+// Load updated HTML templates and partials into Panini
+function resetPages(done) {
+  panini.refresh();
   done();
 }
 
-function serve(done) {
-
-  server.init({
-    server: {
-      baseDir: `./${buildPath}`
-    }
-  });
-  done()
+// Generate a style guide from the Markdown content and HTML template in styleguide/
+function styleGuide(done) {
+  sherpa(`${PATHS.styleGuide}/index.md`, {
+    output: PATHS.dist + '/styleguide.html',
+    template: `${PATHS.styleGuide}/template.hbs`
+  }, done);
 }
 
-const watchTs = () => gulp.watch(paths.scripts.src, gulp.series(tsCompile, reload));
-const watchHbs = () => gulp.watch(paths.hbs.src, gulp.series(hbsCompile, reload));
+// Compile Sass into CSS
+// In production, the CSS is compressed
+function sass() {
 
-const dev = gulp.series(clean, registerHbsPartials, tsCompile, hbsCompile, serve, watchTs, watchHbs);
+  const postCssPlugins = [
+    // Autoprefixer
+    autoprefixer({browsers: COMPATIBILITY}),
 
-export default dev
+    // UnCSS - Uncomment to remove unused styles in production
+    // PRODUCTION && uncss.postcssPlugin(UNCSS_OPTIONS),
+  ].filter(Boolean);
+
+  return gulp.src(`${PATHS.src}/**/*.{scss}`)
+    .pipe($.sourcemaps.init())
+    .pipe($.sass({
+      includePaths: PATHS.sass
+    })
+      .on('error', $.sass.logError))
+    .pipe($.postcss(postCssPlugins))
+    .pipe($.if(PRODUCTION, $.cleanCss({compatibility: 'ie9'})))
+    .pipe($.if(!PRODUCTION, $.sourcemaps.write()))
+    .pipe(gulp.dest(PATHS.dist + '/assets/css'))
+    .pipe(browser.reload({stream: true}));
+}
+
+let webpackConfig = {
+  mode: (PRODUCTION ? 'production' : 'development'),
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ["@babel/preset-env"],
+            compact: false
+          }
+        }
+      }
+    ]
+  },
+  devtool: !PRODUCTION && 'source-map'
+};
+
+
+
+// Transpiles and combines typescript and javascript into one file
+// In production, the file is minified
+function typescript() {
+  return gulp.src(`${PATHS.src}/**/*.{ts}`)
+    .pipe(sourcemaps.init())
+    .pipe(tsProject())
+    .pipe(sourcemaps.write())
+    .pipe(webpackStream(webpackConfig, webpack2))
+    .pipe($.if(PRODUCTION, $.uglify()
+      .on('error', e => {
+        console.log(e);
+      })
+    ))
+    .pipe(gulp.dest(PATHS.dist + '/assets/js'));
+}
+
+// Copy images to the "dist" folder
+// In production, the images are compressed
+function images() {
+  return gulp.src(PATHS.imageAssets)
+    .pipe($.if(PRODUCTION, $.imagemin([
+      $.imagemin.jpegtran({progressive: true}),
+    ])))
+    .pipe(gulp.dest(PATHS.dist + '/assets/img'));
+}
+
+// Start a server with BrowserSync to preview the site in
+function server(done) {
+  browser.init({
+    server: PATHS.dist, port: PORT
+  }, done);
+}
+
+// Reload the browser with BrowserSync
+function reload(done) {
+  browser.reload();
+  done();
+}
+
+// Watch for changes to static assets, pages, Sass, and JavaScript
+function watch() {
+  gulp.watch(PATHS.miscAssets, copy);
+  gulp.watch(`${PATHS.pageTemplates}/**/*.{html,hbs}`).on('all', gulp.series(pages, browser.reload));
+  gulp.watch(`src/{layouts,components}/**/*.{html,hbs}`).on('all', gulp.series(resetPages, pages, browser.reload));
+  gulp.watch(`${PATHS.data}/**/*.{js,json,yml}`).on('all', gulp.series(resetPages, pages, browser.reload));
+  gulp.watch(`${PATHS.components}/**/*.scss`).on('all', sass);
+  gulp.watch(`${PATHS.components}/**/*.{js,ts}}`).on('all', typescript);
+  gulp.watch(PATHS.imageAssets).on('all', gulp.series(images, browser.reload));
+  gulp.watch(`${PATHS.styleGuide}/**`).on('all', gulp.series(styleGuide, browser.reload));
+}
