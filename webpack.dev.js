@@ -5,6 +5,7 @@ const path = require('path');
 // Webpack
 const merge = require('webpack-merge');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const LiveReloadPlugin = require('webpack-livereload-plugin');
 const webpack = require('webpack');
 
 module.exports = merge(html, merge(common, {
@@ -24,6 +25,9 @@ module.exports = merge(html, merge(common, {
       template: 'index.html'
     }),
     new webpack.NamedModulesPlugin(),
-    new webpack.HotModuleReplacementPlugin()
+    new webpack.HotModuleReplacementPlugin(),
+    new LiveReloadPlugin({
+      appendScriptTag: true
+    })
   ]
 }));
