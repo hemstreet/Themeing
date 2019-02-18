@@ -1,10 +1,16 @@
 const path = require('path');
+const mode = process.env.NODE_ENV || 'production';
+const isProd = mode === 'production';
+
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const postcssPresetEnv = require('postcss-preset-env');
+const cssnano = require('cssnano');
 
 module.exports = {
   target: "web",
   entry: './src/app.ts',
   output: {
-    filename: '[name].js',
+    filename: `[name].${ isProd ? 'min.' : ''}js`,
     path: path.resolve(__dirname, './dist')
   },
   module: {
@@ -15,32 +21,21 @@ module.exports = {
         exclude: /node_modules/
       },
       {
-        test: /\.(scss)$/,
+        test: /\.scss$/,
         use: [
-          {
-            // Adds CSS to the DOM by injecting a `<style>` tag
-            loader: 'style-loader'
-          },
-          {
-            // Interprets `@import` and `url()` like `import/require()` and will resolve them
-            loader: 'css-loader'
-          },
-          {
-            // Loader for webpack to process CSS with PostCSS
-            loader: 'postcss-loader',
-            options: {
-              plugins: function () {
-                return [
-                  require('autoprefixer')
-                ];
-              }
+          MiniCssExtractPlugin.loader,
+          { loader: 'css-loader', options: { importLoaders: 1 } },
+          isProd
+            ? {
+              loader: 'postcss-loader',
+              options: {
+                ident: 'postcss',
+                plugins: () => [postcssPresetEnv(), cssnano()],
+              },
             }
-          },
-          {
-            // Loads a SASS/SCSS file and compiles it to CSS
-            loader: 'sass-loader'
-          }
-        ]
+            : null,
+          'sass-loader',
+        ].filter(Boolean),
       },
       {
         test: /\.hbs$/,
@@ -54,6 +49,13 @@ module.exports = {
       }
     ]
   },
+  plugins: [
+    new MiniCssExtractPlugin({
+      filename: `[name].${ isProd ? 'min.' : ''}css`,
+      fallback: 'style-loader',
+      use: [{ loader: 'css-loader', options: { minimize: isProd } }],
+    }),
+  ],
   resolve: {
     extensions: [".tsx", ".ts", ".js", ".scss"]
   }
