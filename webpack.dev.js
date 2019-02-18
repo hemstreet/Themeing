@@ -1,4 +1,5 @@
 const common = require('./webpack.common.js');
+const html = require('./webpack.html.js');
 const path = require('path');
 
 // Webpack
@@ -6,7 +7,7 @@ const merge = require('webpack-merge');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
 
-module.exports = merge(common, {
+module.exports = merge(html, merge(common, {
   mode: 'development',
   devtool: 'inline-source-map',
   devServer: {
@@ -25,4 +26,4 @@ module.exports = merge(common, {
     new webpack.NamedModulesPlugin(),
     new webpack.HotModuleReplacementPlugin()
   ]
-});
+}));
