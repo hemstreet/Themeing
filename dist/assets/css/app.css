@@ -1,0 +1,30 @@
+
+
+.d3chart {
+  /* 13. Basic Styling with CSS */
+  width: 100px;
+  height: 100px;
+  /* Style the lines by removing the fill and applying a stroke */
+  /* Style the dots by assigning a fill and stroke */
+}
+
+.d3chart .line {
+  fill: none;
+  stroke: #ffab00;
+  stroke-width: 3;
+}
+
+.d3chart .overlay {
+  fill: none;
+  pointer-events: all;
+}
+
+.d3chart .dot {
+  fill: #ffab00;
+  stroke: #fff;
+}
+
+.d3chart .focus circle {
+  fill: none;
+  stroke: steelblue;
+}

@@ -19,7 +19,6 @@ import rename from 'gulp-rename';
 import sourcemaps from 'gulp-sourcemaps';
 import mergeCSS from 'gulp-merge-css';
 import insert from 'gulp-insert';
-import order from 'gulp-order';
 import concat from 'gulp-concat';
 
 
@@ -42,7 +41,7 @@ function loadConfig() {
 // Build the "dist" folder by running all of the below tasks
 // Sass must be run later so UnCSS can search for used classes in the others assets.
 gulp.task('build',
-  gulp.series(clean, gulp.parallel(pages, getJQuery, scripts, images, copy), sass, styleGuide));
+  gulp.series(clean, gulp.parallel(pages, thirdPartyScripts, scripts, images, copy), sass, styleGuide));
 
 // Build the site, run the server, and watch for file changes
 gulp.task('default',
@@ -119,8 +118,8 @@ let webpackConfig = {
   devtool: !PRODUCTION && 'source-map'
 };
 
-function getJQuery() {
-  return gulp.src('./node_modules/jquery/dist/jquery.min.js')
+function thirdPartyScripts() {
+  return gulp.src(PATHS.thirdParty)
     .pipe(gulp.dest(`${PATHS.dist}/assets/js`));
 }
 
