@@ -1,0 +1,12 @@
+<nav>
+    {{#each nav}}
+        <a href="{{this.link}}">{{this.text}}</a>
+        {{#if this.children}}
+            has children
+            {{this.text}}
+        {{/if}}
+    {{/each}}
+
+    test
+</nav>
+

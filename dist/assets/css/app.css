@@ -1,0 +1,160 @@
+.card {
+  background: #fff;
+  border-radius: 5px;
+  margin: 0 20px 20px;
+  position: relative;
+}
+
+.card-value {
+  color: black;
+  font-size: 22px;
+  font-weight: 800;
+  padding: 1rem 2rem 1.75rem;
+  text-align: center;
+}
+
+.card-category {
+  bottom: 6px;
+  color: black;
+  font-size: 12px;
+  left: 6px;
+  margin-bottom: 0;
+  position: absolute;
+}
+
+.card-delta {
+  align-items: baseline;
+  bottom: 6px;
+  display: flex;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 0;
+  opacity: 0.7;
+  position: absolute;
+  right: 6px;
+  color: black;
+}
+
+.card-delta i {
+  margin-right: 5px;
+  width: 0.6rem;
+}
+
+.card.positive .card-delta,
+.card.negative .card-delta {
+  color: white;
+}
+
+.card.positive .card-value,
+.card.positive .card-category,
+.card.negative .card-value,
+.card.negative .card-category {
+  color: white;
+}
+
+.card.positive .card-category,
+.card.negative .card-category {
+  opacity: 0.6;
+}
+
+.card.positive {
+  background: green;
+}
+
+.card.negative {
+  background: red;
+}
+.card {
+  background: #fff;
+  border-radius: 5px;
+  margin: 0 20px 20px;
+  position: relative;
+}
+
+.card-value {
+  color: black;
+  font-size: 22px;
+  font-weight: 800;
+  padding: 1rem 2rem 1.75rem;
+  text-align: center;
+}
+
+.card-category {
+  bottom: 6px;
+  color: black;
+  font-size: 12px;
+  left: 6px;
+  margin-bottom: 0;
+  position: absolute;
+}
+
+.card-delta {
+  align-items: baseline;
+  bottom: 6px;
+  display: flex;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 0;
+  opacity: 0.7;
+  position: absolute;
+  right: 6px;
+  color: black;
+}
+
+.card-delta i {
+  margin-right: 5px;
+  width: 0.6rem;
+}
+
+.card.positive .card-delta,
+.card.negative .card-delta {
+  color: white;
+}
+
+.card.positive .card-value,
+.card.positive .card-category,
+.card.negative .card-value,
+.card.negative .card-category {
+  color: white;
+}
+
+.card.positive .card-category,
+.card.negative .card-category {
+  opacity: 0.6;
+}
+
+.card.positive {
+  background: green;
+}
+
+.card.negative {
+  background: red;
+}
+.d3chart {
+  /* 13. Basic Styling with CSS */
+  width: 100px;
+  height: 100px;
+  /* Style the lines by removing the fill and applying a stroke */
+  /* Style the dots by assigning a fill and stroke */
+}
+
+.d3chart .line {
+  fill: none;
+  stroke: #ffab00;
+  stroke-width: 3;
+}
+
+.d3chart .overlay {
+  fill: none;
+  pointer-events: all;
+}
+
+.d3chart .dot {
+  fill: #ffab00;
+  stroke: #fff;
+}
+
+.d3chart .focus circle {
+  fill: none;
+  stroke: steelblue;
+}
