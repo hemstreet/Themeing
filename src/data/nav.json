@@ -1,3 +1,20 @@
-{
-
-}
+[
+  {
+    "text": "Home",
+    "link": "/"
+  },
+  {
+    "text": "Forms",
+    "link": "/forms.html"
+  },
+  {
+    "text": "Buttons",
+    "link": "/buttons.html",
+    "children": [
+      {
+        "text": "Button Child",
+        "link": "/buttons.html"
+      }
+    ]
+  }
+]

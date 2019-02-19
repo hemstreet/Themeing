@@ -41,7 +41,7 @@ function loadConfig() {
 // Build the "dist" folder by running all of the below tasks
 // Sass must be run later so UnCSS can search for used classes in the others assets.
 gulp.task('build',
-  gulp.series(clean, gulp.parallel(pages, thirdPartyScripts, scripts, images, copy), sass, styleGuide));
+  gulp.series(clean, gulp.parallel(pages, thirdPartyScripts, thirdPartyStyles, scripts, images, copy), sass, styleGuide));
 
 // Build the site, run the server, and watch for file changes
 gulp.task('default',
@@ -119,14 +119,22 @@ let webpackConfig = {
 };
 
 function thirdPartyScripts() {
-  return gulp.src(PATHS.thirdParty)
+  return gulp.src(PATHS.thirdPartyScripts)
     .pipe(gulp.dest(`${PATHS.dist}/assets/js`));
+}
+
+function thirdPartyStyles() {
+  return gulp.src(PATHS.thirdPartyStyles)
+    .pipe(gulp.dest(`${PATHS.dist}/assets/css`));
 }
 
 // Transpiles and combines typescript and javascript into one file
 // In production, the file is minified
 function scripts() {
-  return gulp.src(`${PATHS.src}/**/*.js`)
+  return gulp.src([
+    `${PATHS.src}/**/*.js`,
+    `!src/helpers/**`
+  ])
     .pipe(sourcemaps.init())
     // .pipe(ts({
     //   noImplicitAny: true,
@@ -165,7 +173,10 @@ function reload(done) {
 function watch() {
   gulp.watch(PATHS.miscAssets, gulp.series(copy, reload));
   gulp.watch(`${PATHS.pageTemplates}/**/*.{html,hbs}`).on('all', gulp.series(pages, reload));
-  gulp.watch(`src/{layouts,components}/**/*.{html,hbs}`).on('all', gulp.series(resetPages, pages, reload));
+  gulp.watch([
+    `src/{layouts,components}/**/*.{html,hbs}`,
+    `src/helpers/**`
+  ]).on('all', gulp.series(resetPages, pages, reload));
   gulp.watch(`${PATHS.data}/**/*.{json,yml}`).on('all', gulp.series(resetPages, pages, reload));
   gulp.watch(`src/**/*.scss`).on('all', gulp.series(sass, reload));
   gulp.watch(`src/**/*.js`).on('all', gulp.series(scripts, reload));

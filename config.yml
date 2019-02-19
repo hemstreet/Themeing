@@ -31,8 +31,12 @@ PATHS:
   data: "src/data"
   layouts: "src/layouts"
   pageTemplates:  "src/pages"
+  helpers:  "src/helpers"
   styleGuide: "src/styleguide"
   partials: "src/components"
-  thirdParty:
+  thirdPartyScripts:
     - "node_modules/jquery/dist/jquery.min.js"
     - "node_modules/d3/dist/d3.min.js"
+    - "node_modules/bootstrap/dist/js/bootstrap.min.js"
+  thirdPartyStyles:
+    - "node_modules/bootstrap/dist/css/bootstrap.min.css"

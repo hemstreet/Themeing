@@ -1,11 +1,7 @@
-Index page template
 {{> header}}
 
-{{> card }}
-{{> card }}
-{{> card }}
-{{> card }}
+{{#each cards}}
+    {{> card this}}
+{{/each}}
 
-
-{{> sunburst }}
 {{> footer}}

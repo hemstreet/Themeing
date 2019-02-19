@@ -1,0 +1,14 @@
+[
+  {
+    "position": true,
+    "value": "$30,000",
+    "category": "food",
+    "delta": "$300(10%)"
+  },
+  {
+    "position": false,
+    "value": "$10,000",
+    "category": "taxes",
+    "delta": "$100(1%)"
+  }
+]

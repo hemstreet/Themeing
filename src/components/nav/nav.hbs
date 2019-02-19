@@ -1,5 +1,12 @@
 <nav>
-    <a href="/index.html">Home</a>
-    <a href="/buttons.html">Buttons</a>
+    {{#each nav}}
+        <a href="{{this.link}}">{{this.text}}</a>
+        {{#if this.children}}
+            has children
+            {{this.text}}
+        {{/if}}
+    {{/each}}
+
     test
 </nav>
+

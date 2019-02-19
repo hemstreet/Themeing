@@ -1,0 +1,23 @@
+{
+  "title": "Skeleton Theme",
+  "styles": [
+    {
+      "file": "bootstrap.min.css",
+      "enabled": true
+    }
+  ],
+  "scripts": [
+    {
+      "file": "jquery.min.js",
+      "enabled": true
+    },
+    {
+      "file": "bootstrap.min.js",
+      "enabled":  true
+    },
+    {
+      "file": "d3.min.js",
+      "enabled":  true
+    }
+  ]
+}

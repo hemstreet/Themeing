@@ -1,3 +1,17 @@
-<div class="card">
-    card hbs file
+<div class="card{{#if positive}} success{{/if}}{{#if negative}} danger{{/if}}">
+    <h5 class="card-value"{{value}}</h5>
+    <div>
+        <p class="card-category">{{category}}</p>
+        <p class="card-delta">
+            {{#if positive}}
+                <i class="fa fa-arrow-up" aria-hidden="true"></i>
+            {{else}}
+                {{#if negative}}
+                    <i class="fa fa-arrow-down" aria-hidden="true"></i>
+                {{/if}}
+            {{/if}}
+           {{delta}}
+        </p>
+    </div>
 </div>
+
